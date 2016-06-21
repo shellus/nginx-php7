@@ -130,14 +130,14 @@ ADD index.php /data/www/index.php
 ADD nginx.conf /usr/local/nginx/conf/nginx.conf
 
 #Start
-ADD start.sh /run.sh
+ADD run.sh /run.sh
 RUN chmod +x /run.sh
 
 #Set port
 EXPOSE 80
 
 #Start it
-ENTRYPOINT ["/run.sh"]
+#ENTRYPOINT ["/run.sh"]
 
 #Start web server
-#CMD ["/bin/bash", "/start.sh"]
+CMD ["/run.sh", "/bin/bash"]
