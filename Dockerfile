@@ -1,5 +1,4 @@
 FROM centos:7
-MAINTAINER Skiychan <dev@skiy.net>
 
 ENV NGINX_VERSION 1.11.1
 ENV PHP_VERSION 7.0.7
@@ -15,7 +14,7 @@ RUN yum install -y gcc \
 
 #Install PHP library
 ## libmcrypt-devel DIY
-RUN rpm -ivh http://dl.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm && \
+RUN yum install -y epel-release && \
     yum install -y wget \
     zlib \
     zlib-devel \
@@ -39,29 +38,26 @@ RUN groupadd -r www && \
     useradd -M -s /sbin/nologin -r -g www www
 
 #Download nginx & php
-RUN mkdir -p /home/nginx-php && cd $_ && \
+RUN mkdir -p /home/install && cd $_ && \
     wget -c -O nginx.tar.gz http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
-    wget -O php.tar.gz http://php.net/distributions/php-$PHP_VERSION.tar.gz && \
-    curl -O -SL https://github.com/xdebug/xdebug/archive/XDEBUG_2_4_0RC3.tar.gz
+    wget -O php.tar.gz http://php.net/distributions/php-$PHP_VERSION.tar.gz
 
 #Make install nginx
-RUN cd /home/nginx-php && \
+RUN cd /home/install && \
     tar -zxvf nginx.tar.gz && \
     cd nginx-$NGINX_VERSION && \
     ./configure --prefix=/usr/local/nginx \
     --user=www --group=www \
-    --error-log-path=/var/log/nginx_error.log \
-    --http-log-path=/var/log/nginx_access.log \
+    --error-log-path=/var/log/nginx/error.log \
+    --http-log-path=/var/log/nginx/access.log \
     --pid-path=/var/run/nginx.pid \
     --with-pcre \
     --with-http_ssl_module \
-    --without-mail_pop3_module \
-    --without-mail_imap_module \
     --with-http_gzip_static_module && \
     make && make install
 
 #Make install php
-RUN cd /home/nginx-php && \
+RUN cd /home/install && \
     tar zvxf php.tar.gz && \
     cd php-$PHP_VERSION && \
     ./configure --prefix=/usr/local/php \
@@ -108,16 +104,7 @@ RUN cd /home/nginx-php && \
     --without-pear && \
     make && make install
 
-#Add xdebug extension
-RUN cd /home/nginx-php && \
-    tar -zxvf XDEBUG_2_4_0RC3.tar.gz && \
-    cd xdebug-XDEBUG_2_4_0RC3 && \
-    /usr/local/php/bin/phpize && \
-    ./configure --enable-xdebug --with-php-config=/usr/local/php/bin/php-config && \
-    make && \
-    cp modules/xdebug.so /usr/local/php/lib/php/extensions/no-debug-non-zts-20151012/
-
-RUN cd /home/nginx-php/php-$PHP_VERSION && \
+RUN cd /home/install/php-$PHP_VERSION && \
     cp php.ini-production /usr/local/php/etc/php.ini && \
     cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
@@ -132,27 +119,25 @@ RUN easy_install supervisor && \
 ADD supervisord.conf /etc/supervisord.conf
 
 #Remove zips
-RUN cd / && rm -rf /home/nginx-php
+RUN cd / && rm -rf /home/install
 
 #Create web folder
-VOLUME ["/data/www", "/usr/local/nginx/conf/ssl", "/usr/local/nginx/conf/vhost", "/usr/local/php/etc/php.d"]
+VOLUME ["/data/www"]
 RUN chown -R www:www /data/www
 ADD index.php /data/www/index.php
-
-ADD xdebug.ini /usr/local/php/etc/php.d/xdebug.ini
 
 #Update nginx config
 ADD nginx.conf /usr/local/nginx/conf/nginx.conf
 
 #Start
-ADD start.sh /start.sh
-RUN chmod +x /start.sh
+ADD start.sh /run.sh
+RUN chmod +x /run.sh
 
 #Set port
-EXPOSE 80 443
+EXPOSE 80
 
 #Start it
-ENTRYPOINT ["/start.sh"]
+ENTRYPOINT ["/run.sh"]
 
 #Start web server
 #CMD ["/bin/bash", "/start.sh"]
