@@ -110,7 +110,7 @@ RUN cd /home/install/php-$PHP_VERSION && \
     cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
 
-RUN php -r "readfile('https://getcomposer.org/installer');" | php &&
+RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer
 
 #Install supervisor
