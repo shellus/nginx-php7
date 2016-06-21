@@ -102,12 +102,16 @@ RUN cd /home/install && \
     --enable-ipv6 \
     --disable-debug \
     --without-pear && \
-    make && make install
+    make && make install &&
+    ln -s /usr/local/php/bin/php /usr/bin/php
 
 RUN cd /home/install/php-$PHP_VERSION && \
     cp php.ini-production /usr/local/php/etc/php.ini && \
     cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
+
+RUN php -r "readfile('https://getcomposer.org/installer');" | php &&
+    mv composer.phar /usr/bin/composer
 
 #Install supervisor
 RUN easy_install supervisor && \
@@ -118,13 +122,15 @@ RUN easy_install supervisor && \
 #Add supervisord conf
 ADD supervisord.conf /etc/supervisord.conf
 
+#Add SSH
+RUN mkdir -p /root/.ssh &&
+    chmod 700 /root/.ssh &&
+    chown root:root /root/.ssh
+ADD id_rsa.pub /root/.ssh/authorized_keys
+RUN chmod 600 /root/.ssh/authorized_keys
+
 #Remove zips
 RUN cd / && rm -rf /home/install
-
-#Create web folder
-VOLUME ["/data/www"]
-RUN chown -R www:www /data/www
-ADD index.php /data/www/index.php
 
 #Update nginx config
 ADD nginx.conf /usr/local/nginx/conf/nginx.conf

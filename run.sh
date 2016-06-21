@@ -7,19 +7,20 @@
 # Created Time: 2015/12/13
 #########################################################################
 Nginx_Install_Dir=/usr/local/nginx
-DATA_DIR=/data/www
+DATA_DIR=/www
 
 set -e
 
+cd ${DATA_DIR}
+
 if [[ -n "$GIT" ]]; then
-    cd ${DATA_DIR}
-    cd ..
-    rmdir ${DATA_DIR}
-    git clone ${GIT} www
-    chown -R www.www ${DATA_DIR}
+    git clone ${GIT} git_app
+    cd git_app
     echo "git $GIT clone done"
 else
-    echo "User is $USER"
+    echo "User is $USER; not deinf GIT var"
 fi
+
+chown -R www:www ./
 
 /usr/bin/supervisord -n -c /etc/supervisord.conf
