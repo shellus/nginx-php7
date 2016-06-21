@@ -102,7 +102,7 @@ RUN cd /home/install && \
     --enable-ipv6 \
     --disable-debug \
     --without-pear && \
-    make && make install &&
+    make && make install && \
     ln -s /usr/local/php/bin/php /usr/bin/php
 
 RUN cd /home/install/php-$PHP_VERSION && \
@@ -123,8 +123,8 @@ RUN easy_install supervisor && \
 ADD supervisord.conf /etc/supervisord.conf
 
 #Add SSH
-RUN mkdir -p /root/.ssh &&
-    chmod 700 /root/.ssh &&
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
     chown root:root /root/.ssh
 ADD id_rsa.pub /root/.ssh/authorized_keys
 RUN chmod 600 /root/.ssh/authorized_keys
