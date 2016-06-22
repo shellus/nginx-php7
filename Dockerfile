@@ -153,6 +153,6 @@ EXPOSE 22
 
 #Start it
 ENTRYPOINT ["/run.sh"]
-
+VOLUME ["/www"]
 #Start sshd
 CMD ["service sshd start"]
