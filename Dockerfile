@@ -138,7 +138,7 @@ RUN mkdir -p /root/.ssh && \
 
 #Add provision
 RUN mkdir -p /www && \
-    cp /provision/index.php /www/index.php && \
+    cp /provision/index.php /www/index.php
 
 #Remove files
 RUN cd / && rm -rf /home/install && rm -rf /provision
