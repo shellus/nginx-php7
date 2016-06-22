@@ -10,7 +10,7 @@ Nginx_Install_Dir=/usr/local/nginx
 DATA_DIR=/www
 
 set -e
-
+mkdir -p ${DATA_DIR}
 cd ${DATA_DIR}
 
 if [[ -n "$GIT" ]]; then
@@ -21,6 +21,6 @@ else
     echo "User is $USER; not deinf GIT var"
 fi
 
-chown -R www:www ./
+chown -R www:www .
 
 /usr/bin/supervisord -n -c /etc/supervisord.conf
