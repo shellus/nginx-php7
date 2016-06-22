@@ -131,7 +131,8 @@ RUN mkdir -p /www && \
     cp /provision/index.php /www/index.php
 
 #Cahce Composer Packages
-RUN composer create-project laravel/laravel
+RUN cd /provision/cache/ && \
+    composer install --no-autoloader --no-scripts
 
 #Install supervisor
 RUN easy_install supervisor && \
