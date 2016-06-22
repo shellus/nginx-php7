@@ -1,4 +1,4 @@
-FROM centos:7.2.1511
+FROM centos:6.8
 
 ENV NGINX_VERSION 1.11.1
 ENV PHP_VERSION 7.0.7
@@ -112,6 +112,9 @@ RUN cd /home/install/php-$PHP_VERSION && \
 
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer
+
+RUN mkdir -p /www
+ADD index.php /www/index.php
 
 #Install supervisor
 RUN easy_install supervisor && \
