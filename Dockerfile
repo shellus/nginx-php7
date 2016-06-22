@@ -3,6 +3,11 @@ FROM centos:6.8
 ENV NGINX_VERSION 1.11.1
 ENV PHP_VERSION 7.0.7
 
+#Provision
+RUN mkdir /provision
+ADD provision /provision
+
+
 RUN yum install -y gcc \
     gcc-c++ \
     autoconf \
@@ -54,7 +59,9 @@ RUN cd /home/install && \
     --with-pcre \
     --with-http_ssl_module \
     --with-http_gzip_static_module && \
-    make && make install
+    make && make install && \
+    cp /provision/nginx.conf /usr/local/nginx/conf/nginx.conf && \
+    ln -s /usr/local/nginx/conf/nginx.conf /etc/nginx.conf
 
 #Make install php
 RUN cd /home/install && \
@@ -107,7 +114,9 @@ RUN cd /home/install && \
 
 RUN cd /home/install/php-$PHP_VERSION && \
     cp php.ini-production /usr/local/php/etc/php.ini && \
+    ln -s /usr/local/php/etc/php.ini /etc/php.ini && \
     cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf && \
+    ln -s /usr/local/php/etc/php-fpm.conf /etc/php-fpm.ini && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
 
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
@@ -117,31 +126,22 @@ RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
 RUN easy_install supervisor && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/run/sshd && \
-    mkdir -p /var/run/supervisord
-
-#Provision
-RUN mkdir /provision
-ADD provision /provision
+    mkdir -p /var/run/supervisord && \
+    cp /provision/supervisord.conf /etc/supervisord.conf
 
 #Add SSH
 RUN mkdir -p /root/.ssh && \
     chmod 700 /root/.ssh && \
     chown root:root /root/.ssh && \
-    service sshd start && \
-    chkconfig sshd on
+    cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
+    chmod 600 /root/.ssh/authorized_keys
 
 #Add provision
-RUN cp /provision/supervisord.conf /etc/supervisord.conf && \
-    cp /provision/nginx.conf /usr/local/nginx/conf/nginx.conf && \
-    mkdir -p /www && \
+RUN mkdir -p /www && \
     cp /provision/index.php /www/index.php && \
-    ln -s /usr/local/nginx/conf/nginx.conf /etc/nginx.conf && \
-    cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
-    chmod 600 /root/.ssh/authorized_keys && \
-    rm -rf /provision
 
-#Remove zips
-RUN cd / && rm -rf /home/install
+#Remove files
+RUN cd / && rm -rf /home/install && rm -rf /provision
 
 #Start
 ADD run.sh /run.sh
@@ -154,5 +154,5 @@ EXPOSE 22
 #Start it
 ENTRYPOINT ["/run.sh"]
 
-#Start web server
-#CMD ["/run.sh"]
+#Start sshd
+CMD ["service sshd start"]
