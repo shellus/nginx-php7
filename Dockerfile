@@ -113,30 +113,34 @@ RUN cd /home/install/php-$PHP_VERSION && \
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer
 
-RUN mkdir -p /www
-ADD index.php /www/index.php
-
 #Install supervisor
 RUN easy_install supervisor && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/run/sshd && \
     mkdir -p /var/run/supervisord
 
-#Add supervisord conf
-ADD supervisord.conf /etc/supervisord.conf
+#Provision
+RUN mkdir /provision
+ADD provision /provision
 
 #Add SSH
 RUN mkdir -p /root/.ssh && \
     chmod 700 /root/.ssh && \
-    chown root:root /root/.ssh
-ADD id_rsa.pub /root/.ssh/authorized_keys
-RUN chmod 600 /root/.ssh/authorized_keys
+    chown root:root /root/.ssh && \
+    chkconfig sshd on
+
+#Add provision
+RUN cp /provision/supervisord.conf /etc/supervisord.conf && \
+    cp /provision/nginx.conf /usr/local/nginx/conf/nginx.conf && \
+    mkdir -p /www && \
+    cp /provision/index.php /www/index.php && \
+    ln -s /usr/local/nginx/conf/nginx.conf /etc/nginx.conf && \
+    cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
+    chmod 600 /root/.ssh/authorized_keys && \
+    rm -rf /provision
 
 #Remove zips
 RUN cd / && rm -rf /home/install
-
-#Update nginx config
-ADD nginx.conf /usr/local/nginx/conf/nginx.conf
 
 #Start
 ADD run.sh /run.sh
