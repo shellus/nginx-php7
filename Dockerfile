@@ -141,9 +141,10 @@ RUN chmod +x /run.sh
 
 #Set port
 EXPOSE 80
+EXPOSE 22
 
 #Start it
-#ENTRYPOINT ["/run.sh"]
+ENTRYPOINT ["/run.sh"]
 
 #Start web server
-CMD ["/run.sh", "/bin/bash"]
+#CMD ["/run.sh"]
