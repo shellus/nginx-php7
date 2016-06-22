@@ -127,6 +127,7 @@ ADD provision /provision
 RUN mkdir -p /root/.ssh && \
     chmod 700 /root/.ssh && \
     chown root:root /root/.ssh && \
+    service sshd start && \
     chkconfig sshd on
 
 #Add provision
