@@ -122,6 +122,17 @@ RUN cd /home/install/php-$PHP_VERSION && \
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer
 
+RUN yum install -y git && \
+    yum install -y vim && \
+    yum clean all
+
+#Add www path
+RUN mkdir -p /www && \
+    cp /provision/index.php /www/index.php
+
+#Cahce Composer Packages
+RUN composer create-project laravel/laravel
+
 #Install supervisor
 RUN easy_install supervisor && \
     mkdir -p /var/log/supervisor && \
@@ -136,9 +147,6 @@ RUN mkdir -p /root/.ssh && \
     cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
     chmod 600 /root/.ssh/authorized_keys
 
-#Add www path
-RUN mkdir -p /www && \
-    cp /provision/index.php /www/index.php
 
 #Remove files
 RUN cd / && rm -rf /home/install && rm -rf /provision
