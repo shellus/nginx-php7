@@ -136,7 +136,7 @@ RUN mkdir -p /root/.ssh && \
     cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
     chmod 600 /root/.ssh/authorized_keys
 
-#Add provision
+#Add www path
 RUN mkdir -p /www && \
     cp /provision/index.php /www/index.php
 
