@@ -2,12 +2,23 @@ FROM centos:6.8
 
 ENV NGINX_VERSION 1.11.1
 ENV PHP_VERSION 7.0.7
+ENV INSTALL_DIR /root/install
+ENV PROVISION_DIR /root/provision
+ENV HELPER_DIR /root/helper
+ENV WWW_DIR /www
 
-#Provision
-RUN mkdir /provision
-ADD provision /provision
+# Create DIRs
+RUN mkdir $INSTALL_DIR \
+    $PROVISION_DIR \
+    $HELPER_DIR \
+    $WWW_DIR
 
+# Add Files
+ADD provision $PROVISION_DIR
+ADD helper $PROVISION_DIR
+ADD www $WWW_DIR
 
+# Install Require Package
 RUN yum install -y gcc \
     gcc-c++ \
     autoconf \
@@ -21,6 +32,7 @@ RUN yum install -y gcc \
 ## libmcrypt-devel DIY
 RUN yum install -y epel-release && \
     yum install -y wget \
+    git \
     zlib \
     zlib-devel \
     openssl \
@@ -38,17 +50,17 @@ RUN yum install -y epel-release && \
     python-setuptools && \
     yum clean all
 
-#Add user
-RUN groupadd -r www && \
-    useradd -M -s /sbin/nologin -r -g www www
-
 #Download nginx & php
 RUN mkdir -p /home/install && cd $_ && \
     wget -c -O nginx.tar.gz http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
     wget -O php.tar.gz http://php.net/distributions/php-$PHP_VERSION.tar.gz
 
+#Add user
+RUN groupadd -r www && \
+    useradd -M -s /sbin/nologin -r -g www www
+
 #Make install nginx
-RUN cd /home/install && \
+RUN cd $INSTALL_DIR && \
     tar -zxvf nginx.tar.gz && \
     cd nginx-$NGINX_VERSION && \
     ./configure --prefix=/usr/local/nginx \
@@ -60,11 +72,11 @@ RUN cd /home/install && \
     --with-http_ssl_module \
     --with-http_gzip_static_module && \
     make && make install && \
-    cp /provision/nginx.conf /usr/local/nginx/conf/nginx.conf && \
+    cp $PROVISION_DIR/nginx.conf /usr/local/nginx/conf/nginx.conf && \
     ln -s /usr/local/nginx/conf/nginx.conf /etc/nginx.conf
 
 #Make install php
-RUN cd /home/install && \
+RUN cd $INSTALL_DIR && \
     tar zvxf php.tar.gz && \
     cd php-$PHP_VERSION && \
     ./configure --prefix=/usr/local/php \
@@ -112,26 +124,20 @@ RUN cd /home/install && \
     make && make install && \
     ln -s /usr/local/php/bin/php /usr/bin/php
 
-RUN cd /home/install/php-$PHP_VERSION && \
+# Conf PHP
+RUN cd $INSTALL_DIR/php-$PHP_VERSION && \
     cp php.ini-production /usr/local/php/etc/php.ini && \
     ln -s /usr/local/php/etc/php.ini /etc/php.ini && \
     cp /usr/local/php/etc/php-fpm.conf.default /usr/local/php/etc/php-fpm.conf && \
     ln -s /usr/local/php/etc/php-fpm.conf /etc/php-fpm.ini && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
 
+# Install Composer
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer
 
-RUN yum install -y git && \
-    yum install -y vim && \
-    yum clean all
-
-#Add www path
-RUN mkdir -p /www && \
-    cp /provision/index.php /www/index.php
-
 #Cahce Composer Packages
-RUN cd /provision/cache/ && \
+RUN cd $HELPER_DIR/cache/ && \
     composer install --no-autoloader --no-scripts
 
 #Install supervisor
@@ -139,30 +145,32 @@ RUN easy_install supervisor && \
     mkdir -p /var/log/supervisor && \
     mkdir -p /var/run/sshd && \
     mkdir -p /var/run/supervisord && \
-    cp /provision/supervisord.conf /etc/supervisord.conf
+    cp $PROVISION_DIR/supervisord.conf /etc/supervisord.conf
 
 #Add SSH
-RUN mkdir -p /root/.ssh && \
-    chmod 700 /root/.ssh && \
-    chown root:root /root/.ssh && \
-    cp /provision/id_rsa.pub /root/.ssh/authorized_keys && \
-    chmod 600 /root/.ssh/authorized_keys
+#RUN mkdir -p /root/.ssh && \
+#    chmod 700 /root/.ssh && \
+#    chown root:root /root/.ssh && \
+#    cp $PROVISION_DIR/id_rsa.pub /root/.ssh/authorized_keys && \
+#    chmod 600 /root/.ssh/authorized_keys
 
 
 #Remove files
-RUN cd / && rm -rf /home/install && rm -rf /provision
+RUN cd / && \
+    rm -rf $INSTALL_DIR && \
+    rm -rf $PROVISION_DIR && \
+    rm -rf $HELPER_DIR/cache
 
 #Start
 ADD run.sh /run.sh
-ADD install_app.sh /install_app.sh
 RUN chmod +x /*.sh
 
 #Set port
 EXPOSE 80
-EXPOSE 22
+#EXPOSE 22
 
 #Start it
 ENTRYPOINT ["/run.sh"]
-VOLUME /www
+#VOLUME /www
 #Start sshd
 #CMD ["/install_app.sh"]
