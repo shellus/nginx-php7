@@ -165,4 +165,4 @@ EXPOSE 22
 ENTRYPOINT ["/run.sh"]
 VOLUME /www
 #Start sshd
-CMD ["/install_app.sh"]
+#CMD ["/install_app.sh"]
