@@ -154,7 +154,8 @@ RUN cd / && rm -rf /home/install && rm -rf /provision
 
 #Start
 ADD run.sh /run.sh
-RUN chmod +x /run.sh
+ADD install_app.sh /install_app.sh
+RUN chmod +x /*.sh
 
 #Set port
 EXPOSE 80
@@ -164,4 +165,4 @@ EXPOSE 22
 ENTRYPOINT ["/run.sh"]
 VOLUME /www
 #Start sshd
-CMD ["service sshd start"]
+CMD ["/install_app.sh"]
