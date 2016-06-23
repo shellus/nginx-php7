@@ -51,7 +51,7 @@ RUN yum install -y epel-release && \
     yum clean all
 
 #Download nginx & php
-RUN mkdir -p /home/install && cd $_ && \
+RUN mkdir -p $INSTALL_DIR && cd $_ && \
     wget -c -O nginx.tar.gz http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
     wget -O php.tar.gz http://php.net/distributions/php-$PHP_VERSION.tar.gz
 
