@@ -15,7 +15,7 @@ RUN mkdir $INSTALL_DIR \
 
 # Add Files
 ADD provision $PROVISION_DIR
-ADD helper $PROVISION_DIR
+ADD helper $HELPER_DIR
 ADD www $WWW_DIR
 
 # Install Require Package
@@ -161,16 +161,20 @@ RUN cd / && \
     rm -rf $PROVISION_DIR && \
     rm -rf $HELPER_DIR/cache
 
-#Start
+# Add Script
 ADD run.sh /run.sh
 RUN chmod +x /*.sh
 
-#Set port
+# Start it
+ENTRYPOINT ["/run.sh"]
+#CMD ["/install_app.sh"]
+
+
+# Set port
 EXPOSE 80
 #EXPOSE 22
 
-#Start it
-ENTRYPOINT ["/run.sh"]
+# Add Volume
 #VOLUME /www
-#Start sshd
-#CMD ["/install_app.sh"]
+
+
