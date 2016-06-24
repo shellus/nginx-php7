@@ -7,17 +7,6 @@ ENV PROVISION_DIR /root/provision
 ENV HELPER_DIR /root/helper
 ENV WWW_DIR /www
 
-# Create DIRs
-RUN mkdir $INSTALL_DIR \
-    $PROVISION_DIR \
-    $HELPER_DIR \
-    $WWW_DIR
-
-# Add Files
-ADD provision $PROVISION_DIR
-ADD helper $HELPER_DIR
-ADD www $WWW_DIR
-
 # Install Require Package
 RUN yum install -y gcc \
     gcc-c++ \
@@ -49,6 +38,17 @@ RUN yum install -y epel-release && \
     openssh-server \
     python-setuptools && \
     yum clean all
+
+# Create DIRs
+RUN mkdir $INSTALL_DIR \
+    $PROVISION_DIR \
+    $HELPER_DIR \
+    $WWW_DIR
+
+# Add Files
+ADD provision $PROVISION_DIR
+ADD helper $HELPER_DIR
+ADD www $WWW_DIR
 
 #Download nginx & php
 RUN mkdir -p $INSTALL_DIR && cd $_ && \
@@ -136,16 +136,13 @@ RUN cd $INSTALL_DIR/php-$PHP_VERSION && \
 RUN cp $PROVISION_DIR/nginx /etc/init.d/nginx && \
     cp $PROVISION_DIR/php-fpm /etc/init.d/php-fpm && \
     chmod +x /etc/init.d/nginx && chmod +x /etc/init.d/php-fpm && \
-    chkconfig nginx on && chkconfig php-fpm on && \
-    service nginx start && service php-fpm start
+    chkconfig nginx on && chkconfig php-fpm on
 
-# Install Composer
+# Install Composer && Cahce Composer Packages
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
     mv composer.phar /usr/bin/composer && \
-    composer config -g repo.packagist composer https://packagist.phpcomposer.com
-
-#Cahce Composer Packages
-RUN cd $HELPER_DIR/cache/ && \
+    composer config -g repo.packagist composer https://packagist.phpcomposer.com && \
+    cd $HELPER_DIR/cache/ && \
     composer install --no-autoloader --no-scripts
 
 #Install supervisor
