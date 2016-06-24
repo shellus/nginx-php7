@@ -132,9 +132,17 @@ RUN cd $INSTALL_DIR/php-$PHP_VERSION && \
     ln -s /usr/local/php/etc/php-fpm.conf /etc/php-fpm.ini && \
     cp /usr/local/php/etc/php-fpm.d/www.conf.default /usr/local/php/etc/php-fpm.d/www.conf
 
+# Conf Service
+RUN cp $PROVISION_DIR/nginx /etc/init.d/nginx && \
+    cp $PROVISION_DIR/php-fpm /etc/init.d/php-fpm && \
+    chmod +x /etc/init.d/nginx && chmod +x /etc/init.d/php-fpm && \
+    chkconfig nginx on && chkconfig php-fpm on && \
+    service nginx start && service php-fpm start
+
 # Install Composer
 RUN php -r "readfile('https://getcomposer.org/installer');" | php && \
-    mv composer.phar /usr/bin/composer
+    mv composer.phar /usr/bin/composer && \
+    composer config -g repo.packagist composer https://packagist.phpcomposer.com
 
 #Cahce Composer Packages
 RUN cd $HELPER_DIR/cache/ && \
@@ -148,11 +156,11 @@ RUN easy_install supervisor && \
     cp $PROVISION_DIR/supervisord.conf /etc/supervisord.conf
 
 #Add SSH
-#RUN mkdir -p /root/.ssh && \
-#    chmod 700 /root/.ssh && \
-#    chown root:root /root/.ssh && \
-#    cp $PROVISION_DIR/id_rsa.pub /root/.ssh/authorized_keys && \
-#    chmod 600 /root/.ssh/authorized_keys
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    chown root:root /root/.ssh && \
+    cp $PROVISION_DIR/id_rsa.pub /root/.ssh/authorized_keys && \
+    chmod 600 /root/.ssh/authorized_keys
 
 
 #Remove files
